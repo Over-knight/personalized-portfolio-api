@@ -1,6 +1,25 @@
 {
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.21.2"
-  }
+  },
+  "name": "pp.api",
+  "version": "1.0.0",
+  "main": "Express.jsserver.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Over-knight/personalized-portfolio-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Over-knight/personalized-portfolio-api/issues"
+  },
+  "homepage": "https://github.com/Over-knight/personalized-portfolio-api#readme",
+  "description": ""
 }
-

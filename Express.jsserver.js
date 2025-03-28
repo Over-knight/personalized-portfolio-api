@@ -170,20 +170,20 @@ app.get('/users', (req, res) => {
 // const connection = mysql.createConnection({
     // host: 'localhost',
     // user: 'root'
-    // password: ''
+    // password: 'Overnight#1'
 // })
 
-app.get('/projects', (req, res) => {
-    const query = 'SELECT * FROM projects';
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Error executing query;', err);
-            res.status(500).send('Error fetchimg data from database');
-            return;
-        }
-        res.json(results);
-    });  
-});
+// app.get('/projects', (req, res) => {
+//     const query = 'SELECT * FROM projects';
+//     connection.query(query, (err, results) => {
+//         if (err) {
+//             console.error('Error executing query;', err);
+//             res.status(500).send('Error fetchimg data from database');
+//             return;
+//         }
+//         res.json(results);
+//     });  
+// });
 
 app.get('/skills', (req, res) => {
     const query = 'SELECT * FROM skills';
@@ -243,4 +243,190 @@ app.get('/about', (req, res) => {
         }
         res.json(results);
     });  
+});
+
+app.get('/projects', (req, res) => {
+    const query= `
+    SELECT p.id, p.title, p.description, GROUP_CONCAT(t.name)
+    AS technologies
+    FROM projects P
+    JOIN project_technologies pt on p.id = pt.project_id
+    JOIN technologies t on pt.technology_id = t.id 
+    GROUP by p.id
+    `;
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err);
+            res.status(500).send('error fetching data from database');
+            return;
+        }
+        res.json(results);
+    });
+
+});
+
+// if i was ever using react which i'm not
+
+
+// import React, { useEffect, useState } from 'react';
+
+// const Projects = () => {
+//   const [projects, setProjects] = useState([]);
+
+//   useEffect(() => {
+//     // Fetch projects from the API
+//     fetch('http://localhost:4000/projects')
+//       .then((response) => response.json())
+//       .then((data) => setProjects(data))
+//       .catch((error) => console.error('Error fetching projects:', error));
+//   }, []);
+
+//   return (
+//     <div>
+//       <h1>My Projects</h1>
+//       {projects.map((project) => (
+//         <div key={project.id}>
+//           <h2>{project.title}</h2>
+//           <p>{project.description}</p>
+//           <p>Technologies: {project.technologies}</p>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// };
+
+// export default Projects;
+
+
+// already did the read from crude
+const getAllProjects  = () => {
+    return new Promise((resolve, reject) => {
+        const query= `
+        SELECT p.id, p.title, p.description, GROUP_CONCAT(t.name)
+        AS technologies
+        FROM projects P
+        JOIN project_technologies pt on p.id = pt.project_id
+        JOIN technologies t on pt.technology_id = t.id 
+        GROUP by p.id
+        `;
+    
+        connection.query(query, (err, results) => {
+            if (err) reject(err);
+            resolve(results);
+        });
+    });
+};
+
+module.exports = { getAllProjects };
+module.exports = {getAllProjects, createProject, updateProject, deleteProject};
+
+const express = require('express');
+const {getAllProjects} = require('./models/projectModel');
+
+// enable cors
+// cors allows your code to go through to your backend when your front and backend are on different domians
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    next();
+});
+
+//routr to fetch all projects
+app.get('/projects',async (req, res) => {
+    try{
+        const projects = await getAllProjects();
+        res.json(projects);
+    } catch (err) {
+        console.error('Error fetching projects:', err);
+        res.status(500).send('Error fetching data from database');
+    };
+});
+
+// CRUD operations
+// create, read, Update, delete
+const createProject = (title, description) => {
+    return new Promise((resolve, reject) => {
+        const query= 'INSERT INTO PROJECTS (title, description) VALUES (distribution api, helps me out with distribution)';
+        connection.query(query, [title, description], (err, results) => {
+            if(err) reject(err);
+            resolve(results.insertId)
+        });
+    });
+};
+
+const {createProject} = require('./models/projectModel');
+app.use(express.json());
+app.post('/projects', async (req, res) =>{
+    const {title, description} = req.body;
+    try{
+        const projectId = await createProject(title, description);
+        res.status(201).json({id: projectId, title, description});
+    } catch(err) {
+        console.error('Error creating project:', err);
+        res.status(500).send('Error creating project');
+    
+    }
+});
+
+//update
+const updateProject = (id, title, description) => {
+    return new Promise((resolve, reject) => {
+      const query = 'INSERT INTO PROJECTS (title, description) VALUES (voice api, help distributing voice)';
+      connection.query(query, [title, description, id], (err, results) => {
+        if (err) {reject(err);
+            return;
+        }
+        resolve(results.affectedRows); // Return the number of affected rows
+      });
+    });
+  };
+
+  const { updateProject } = require('./models/projectModel');
+
+app.put('/projects/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, description } = req.body;
+  try {
+    const affectedRows = await updateProject(id, title, description);
+    if (affectedRows > 0) {
+      res.json({ id, title, description });
+    } else {
+      res.status(404).send('Project not found');
+    }
+  } catch (err) {
+    console.error('Error updating project:', err);
+    res.status(500).send('Error updating project');
+  }
+});
+
+// delete
+// In projectModel.js
+const deleteProject = (id) => {
+    return new Promise((resolve, reject) => {
+      const query = 'DELETE FROM projects WHERE id = ?';
+      connection.query(query, [id], (err, results) => {
+        if (err){ reject(err);
+            return;
+        } 
+        resolve(results.affectedRows); // Return the number of affected rows
+      });
+    });
+  };
+
+const { deleteProject } = require('./models/projectModel');
+  app.delete('/projects/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const affectedRows = await deleteProject(id);
+    if (affectedRows > 0) {
+      res.send('Project deleted successfully');
+    } else {
+      res.status(404).send('Project not found');
+    }
+  } catch (err) {
+    console.error('Error deleting project:', err);
+    res.status(500).send('Error deleting project');
+  }
 });
